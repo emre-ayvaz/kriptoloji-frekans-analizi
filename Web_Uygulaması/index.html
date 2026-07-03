@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kripto Analiz - Plaintext & Ciphertext Modeli</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <nav class="nav-tabs">
+        <button id="navMain" class="nav-btn active" onclick="switchPage('main')">MANUEL ANALİZ</button>
+        <button id="navTest" class="nav-btn" onclick="switchPage('test')">SİSTEM DOĞRULAMA (TEST)</button>
+    </nav>
+
+    <div id="page-main">
+        <div class="card intro-panel">
+            <h3>Caesar Cipher Frekans Analizi Matematiksel Modeli</h3>
+            <div class="math-box">
+                I<sub>j</sub> = <div class="sigma-wrap"><span class="sigma-top">25</span><span class="sigma-main">Σ</span><span class="sigma-bottom">i=0</span></div> (p<sub>i</sub> · q<sub>i+j</sub>)
+            </div>
+            <div class="formula-legend">
+                <b>i:</b> İngilizce alfabedeki harf sırası (0-25).<br>
+                <b>p<sub>i</sub>:</b> İngilizce Plaintext standart harf frekansı.<br>
+                <b>q<sub>i+j</sub>:</b> Ciphertext içinde j kadar kaydırılmış adresteki harf frekansı.<br>
+                <b>Hedef:</b> Toplam skorun <b>0.065</b>'e en yakın olduğu durum doğru anahtarı verir.
+            </div>
+        </div>
+
+        <div class="card">
+            <textarea id="mainInput" placeholder="Analiz edilecek ciphertext'i buraya girin..."></textarea>
+            <div class="btn-container">
+                <button class="btn btn-action" onclick="runAnalysis('main')">ANALİZİ BAŞLAT</button>
+            </div>
+        </div>
+
+        <div id="mainOutputArea" style="display:none;">
+            <div class="card" style="height: 250px;"><canvas id="mainChart"></canvas></div>
+            <div class="card">
+                <h3>Brute-Force Olasılıkları</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:80px;">Key (j)</th>
+                                <th style="width:120px;">Skor (I<sub>j</sub>)</th>
+                                <th style="width:120px;">Fark</th>
+                                <th style="text-align:left; padding-left:15px;">Plaintext Önizleme</th>
+                                <th style="width:100px;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mainTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="mainFinalPanel" class="card final-panel">
+                <div class="final-header">Tespit Edilen Sonuç</div>
+                <div style="font-size: 20px; margin-bottom: 12px;"><b>Key Değeri (j):</b> <span id="mainFoundKey" style="color:var(--secondary)"></span></div>
+                <h2>Plaintext:</h2> <div class="final-text-area" id="mainFoundText"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-test" style="display:none;">
+        <div class="card intro-panel"><h3>Doğruluk Test Merkezi</h3></div>
+        <div class="test-selector">
+            <button class="test-option-btn" id="btn-t1" onclick="loadTest(1)">TEST 1</button>
+            <button class="test-option-btn" id="btn-t2" onclick="loadTest(2)">TEST 2</button>
+            <button class="test-option-btn" id="btn-t3" onclick="loadTest(3)">TEST 3</button>
+        </div>
+
+        <div id="testInfoArea" style="display:none;">
+            <div class="card info-card">
+                <div><b>BEKLENEN KEY:</b> <span id="expKey" style="color:var(--secondary)"></span></div>
+                <div style="margin:8px 0;"><b>BEKLENEN PLAINTEXT:</b> <span id="expPlain" style="color:var(--secondary); font-weight:bold;"></span></div>
+                <div><b>GİRDİ (CIPHERTEXT):</b> <span id="expCipher" class="mono-text"></span></div>
+                <button class="btn btn-action" style="width: auto; margin-top:15px;" onclick="runAnalysis('test')">TESTİ ÇALIŞTIR</button>
+            </div>
+            <div id="testOutputArea" style="display:none;">
+                <div class="card" style="height: 250px;"><canvas id="testChart"></canvas></div>
+                <div class="card"><div class="table-container"><table><thead><tr><th>Key (j)</th><th>Skor</th><th>Fark</th><th>Plaintext</th><th>İşlem</th></tr></thead><tbody id="testTableBody"></tbody></table></div></div>
+                <div id="testFinalPanel" class="card final-panel">
+                    <div id="testStatusHeader" class="final-header"></div>
+                    <p id="failExplanation" style="display:none; margin-top:10px; color:var(--error); font-weight:bold;">Açıklama: Metin kısa olduğu için istatistiksel sapma yaşandı.</p>
+                    <div class="final-text-area" id="testFoundText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="textModal" class="overlay">
+    <div class="modal">
+        <button class="btn btn-close" onclick="closeModal('textModal')">KAPAT</button>
+        <h2>Tam Plaintext Çıktısı</h2>
+        <div id="fullPlaintext" class="final-text-area"></div>
+    </div>
+</div>
+
+<div id="mathModal" class="overlay">
+    <div class="modal">
+        <button class="btn btn-close" onclick="closeModal('mathModal')">KAPAT</button>
+        <h2 style="color:var(--secondary)">Matematiksel Hesaplama Detayı (j = <span id="modalSelectedJ"></span>)</h2>
+        
+        <div class="formula-legend-modal" style="margin-bottom: 15px; font-size: 14px;">
+            <b>p<sub>i</sub>:</b> İngilizce Plaintext standart harf frekansı.<br>
+            <b>q<sub>i+j</sub>:</b> Ciphertext içinde j kadar kaydırılmış adresteki harf frekansı.<br>
+            <b>p<sub>i</sub> · q<sub>i+j</sub>:</b> İki frekansın o harf üzerindeki eşleşme skoru.
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>i (Harf)</th>
+                        <th>p<sub>i</sub></th>
+                        <th>q<sub>i+j</sub> (Harf)</th>
+                        <th>p<sub>i</sub> · q<sub>i+j</sub></th>
+                    </tr>
+                </thead>
+                <tbody id="mathModalBody"></tbody>
+            </table>
+        </div>
+        <div id="mathModalTotal" class="total-box"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
