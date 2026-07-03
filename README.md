@@ -98,9 +98,7 @@ $$
 Doğru anahtar, bu farkı en küçük yapan anahtar olarak seçilir:
 
 $$
-j^* =
-\underset{j \in \{0,\ldots,25\}}{\operatorname{argmin}}
-\left|I_j - 0.065\right|
+j^* = \arg\min_{j \in \{0,\ldots,25\}} |I_j - 0.065|
 $$
 
 Örneğin bir anahtar için:
